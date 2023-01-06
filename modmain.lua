@@ -7,11 +7,15 @@ local HEALTH_OLD = HEALTH_MAX * GLOBAL.TUNING.WANDA_AGE_THRESHOLD_OLD
 local HEALTH_YOUNG = HEALTH_MAX * GLOBAL.TUNING.WANDA_AGE_THRESHOLD_YOUNG
 local HEALTH_HEAL = GLOBAL.TUNING.POCKETWATCH_HEAL_HEALING * 0.4
 
-local function IsDefaultScreen()
+local function IsHUD()
     local screen = GLOBAL.TheFrontEnd:GetActiveScreen()
-    local screenName = screen and screen.name or ""
+    if not screen or not screen.name then
+        log("Screen has no name")
+        return
+    end
     log("Screen name:" .. screen.name)
-    return screenName:find("HUD") ~= nil
+    
+    return screen.name:find("HUD") ~= nil
 end
 
 local function IsWanda(inst)
@@ -57,7 +61,7 @@ end
 
 local function UseHealWatch()
     local inst = GLOBAL.ThePlayer
-    if not inst or not IsWanda(inst) then
+    if not inst or not IsWanda(inst) or not IsHUD() then
         return
     end
 
@@ -100,16 +104,6 @@ end
 
 local function WandaInit(inst)
     inst:ListenForEvent("healthdelta", OnHealthDelta)
-
-    GLOBAL.TheInput:AddMouseButtonHandler(function(button, down, x, y)
-        if button > 0 then
-            log("Mouse key hit:", { btn = button, down = down })
-        end
-    
-        if button == MOUSEBUTTON_SIDE1 and down then
-            UseHealWatch()
-        end
-    end)    
 end
 
 AddPlayerPostInit(function(inst)
@@ -118,4 +112,24 @@ AddPlayerPostInit(function(inst)
     end
 end)
 
+AddSimPostInit(function()
+    GLOBAL.TheInput:AddKeyHandler(function(key, down)
+        if not down or key <= 0 then return end
 
+        log("Key hit", { key = key, down = down })
+
+        if key == GLOBAL.KEY_X then
+            UseHealWatch()
+        end
+    end)
+    
+    GLOBAL.TheInput:AddMouseButtonHandler(function(button, down, x, y)
+        if not down or button <= 0 then return end
+
+        log("Mouse key hit", { btn = button, down = down })
+    
+        if button == MOUSEBUTTON_SIDE1 then
+            UseHealWatch()
+        end
+    end)
+end)
