@@ -1,6 +1,13 @@
 -- This information tells other players more about the mod
 name = "Wanda Timekit"
-description = "Wanda's full function toolkit to well manage her time"
+
+description = [[
+    Wanda's full function toolkit to well manage her time ;)
+    
+    1. This mod will maintain Wanda's age stage automatically.
+    2. Press mouse side key (backward key) or X key to use the Ageless watch in the inventory or the backpack.
+]]
+
 author = "Sean Xiaolu"
 version = "0.1.0" -- This is the version of the template. Change it to your own number.
 
