@@ -1,5 +1,6 @@
 local utils = require("wtkutils")
 local log = utils.Log
+local GetKeyCode = utils.GetKeyCode
 local MOUSEBUTTON_SIDE1 = 1005
 local MOUSEBUTTON_SIDE2 = 1006
 local HEALTH_MAX = GLOBAL.TUNING.WANDA_MAX_YEARS_OLD - GLOBAL.TUNING.WANDA_MIN_YEARS_OLD
@@ -14,7 +15,7 @@ local function IsHUD()
         return
     end
     log("Screen name:" .. screen.name)
-    
+
     return screen.name:find("HUD") ~= nil
 end
 
@@ -48,7 +49,8 @@ local function FindItem(inst, name, tag)
                 return nil
             end
             for container_inst in pairs(containers) do
-                log("Find watch in container:" .. container_inst.prefab .. (container_inst:HasTag("backpack") and "(backpack)" or "(not backpack)"))
+                log("Find watch in container:" ..
+                    container_inst.prefab .. (container_inst:HasTag("backpack") and "(backpack)" or "(not backpack)"))
                 local watch = Find(container_inst.replica.container:GetItems())
                 if watch then
                     return watch
@@ -73,9 +75,39 @@ local function UseHealWatch()
     GLOBAL.ThePlayer.replica.inventory:UseItemFromInvTile(watch)
 end
 
+local currentMode = nil
+local function InitHealMode()
+    currentMode = nil
+    local stage1 = GetModConfigData("stage1")
+    local stage2 = GetModConfigData("stage2")
+    if stage1 == 0 and stage2 == 0 then
+        return
+    end
+
+    local mode = { next = nil, age = 0 }
+    local last = mode
+    if stage2 > 0 then
+        mode = { next = mode, age = stage2 }
+        currentMode = mode
+    end
+    if stage1 > 0 then
+        mode = { next = mode, age = stage1 }
+        currentMode = mode
+    end
+    last.next = currentMode
+end
+
+local function SwitchHealMode()
+    if currentMode and currentMode.next then
+        currentMode = currentMode.next
+        log("Current maintaining age is switched:" .. currentMode.age)
+        GLOBAL.ThePlayer.components.talker:Say("Maintaining age:" .. (currentMode.age == 0 and "Disabled" or currentMode.age))
+    end
+end
+
 local function GetMaintainedHealth()
-    local health = HEALTH_OLD
-    log("Maintained age is:" .. HEALTH_MAX - health)
+    local health = (currentMode and currentMode.age > 0) and GLOBAL.TUNING.WANDA_MAX_YEARS_OLD - currentMode.age or 0
+    log("Maintained age is:" .. (currentMode and currentMode.age or 0) .. " health:" .. health)
     return health
 end
 
@@ -97,7 +129,7 @@ local function OnHealthDelta(inst, data)
     log("Current health (age = 80 - current): " .. current)
 
     local isDamage = data.oldpercent > data.newpercent
-    if isDamage and current + HEALTH_HEAL <= GetMaintainedHealth() then
+    if isDamage and current <= GetMaintainedHealth() then
         UseHealWatch()
     end
 end
@@ -109,26 +141,36 @@ end
 AddPlayerPostInit(function(inst)
     if IsWanda(inst) then
         WandaInit(inst)
+        InitHealMode()
     end
 end)
 
+
 AddSimPostInit(function()
+    local KEY_HEAL = GetKeyCode(GetModConfigData("keyheal"))
+    local KEY_HEALMODE = GetKeyCode(GetModConfigData("keyhealmode"))
+    local MOUSE_HEAL = GetModConfigData("mouseheal")
+
     GLOBAL.TheInput:AddKeyHandler(function(key, down)
         if not down or key <= 0 then return end
 
         log("Key hit", { key = key, down = down })
 
-        if key == GLOBAL.KEY_X then
+        if key == KEY_HEAL then
             UseHealWatch()
         end
+
+        if key == KEY_HEALMODE then
+            SwitchHealMode()
+        end
     end)
-    
+
     GLOBAL.TheInput:AddMouseButtonHandler(function(button, down, x, y)
         if not down or button <= 0 then return end
 
         log("Mouse key hit", { btn = button, down = down })
-    
-        if button == MOUSEBUTTON_SIDE1 then
+
+        if button == MOUSE_HEAL then
             UseHealWatch()
         end
     end)
