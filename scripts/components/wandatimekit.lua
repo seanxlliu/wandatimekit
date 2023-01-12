@@ -66,6 +66,10 @@ function WandaTimeKit:UseHealWatch()
 end
 
 function WandaTimeKit:SwitchHealMode()
+    if not self.player or not IsHUD() then
+        return
+    end
+    
     if self.currentMode and self.currentMode.next then
         self.currentMode = self.currentMode.next
         log("Current maintaining age is switched:" .. self.currentMode.age)

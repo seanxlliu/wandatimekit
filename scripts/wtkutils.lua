@@ -31,9 +31,9 @@ local function IsHUD()
     local screen = TheFrontEnd:GetActiveScreen()
     if not screen or not screen.name then
         log("Screen has no name")
-        return
+        return false
     end
-    log("Screen name:" .. screen.name)
+    -- log("Screen name:" .. screen.name)
 
     return screen.name:find("HUD") ~= nil
 end
@@ -53,7 +53,6 @@ local function IsDead(inst)
 end
 
 local function FindItem(inst, name, tag)
-    log("Finding watch...")
     local function Find(items)
         if items and type(items) == "table" then
             for k, v in pairs(items) do
@@ -68,7 +67,7 @@ local function FindItem(inst, name, tag)
     end
 
     if (inst and inst.replica and inst.replica.inventory) then
-        log("Find watch in the inventory")
+        log("Finding " .. name ..  "," .. tag .. " in the inventory")
         local watch = Find(inst.replica.inventory:GetItems())
         if watch then
             return watch
@@ -78,7 +77,7 @@ local function FindItem(inst, name, tag)
                 return nil
             end
             for container_inst in pairs(containers) do
-                log("Find watch in container:" ..
+                log("Finding item in container:" ..
                     container_inst.prefab .. (container_inst:HasTag("backpack") and "(backpack)" or "(not backpack)"))
                 local watch = Find(container_inst.replica.container:GetItems())
                 if watch then

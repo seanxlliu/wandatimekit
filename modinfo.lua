@@ -1,4 +1,4 @@
-version = "0.2.0" -- This is the version of the template. Change it to your own number.
+version = "0.2.1" -- This is the version of the template. Change it to your own number.
 
 description = [[
     Wanda's full function toolkit to well manage her time ;) 󰀫
