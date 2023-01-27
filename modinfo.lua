@@ -1,10 +1,11 @@
-version = "0.2.1" -- This is the version of the template. Change it to your own number.
+version = "0.3.0" -- This is the version of the template. Change it to your own number.
 
 description = [[
     Wanda's full function toolkit to well manage her time ;) 󰀫
     
     1. This mod will maintain 2 Wanda's age stages automatically. You may switch between them or turn off.
     2. Press mouse side key or the configurable hot key to use the Ageless Watch in the inventory or the backpack.
+    3. When a recall watch is put in your inventory or a chest, you can ctrl + right-click to name it.
 
     ]]
     

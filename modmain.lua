@@ -1,5 +1,5 @@
 local utils = require("wtkutils")
--- local log = utils.Log
+local log = utils.Log
 local GetKeyCode = utils.GetKeyCode
 local IsWanda = utils.IsWanda
 local MOUSEBUTTON_SIDE1 = 1005
@@ -13,11 +13,13 @@ local stages = {
     GetModConfigData("stage1"),
     GetModConfigData("stage2"),
 }
+local containers = require("containers")
 
 AddPlayerPostInit(function(player)
-    if IsWanda(player) then
+    if IsWanda(player) and GLOBAL.TheWorld and not GLOBAL.TheWorld.ismastersim then
         player:AddComponent("wandatimekit")
         player.components.wandatimekit:SetStages(stages)
+        print("Player component registered")
     end
 end)
 
@@ -52,4 +54,52 @@ AddSimPostInit(function()
             end
         end
     end)
+end)
+
+AddClassPostConstruct("widgets/invslot", function(self)
+    if (GLOBAL.ThePlayer and GLOBAL.ThePlayer.components and GLOBAL.ThePlayer.components.wandatimekit) then
+        GLOBAL.ThePlayer.components.wandatimekit:InitInvSlot(self)
+    end
+end)
+
+GLOBAL.ACTIONS.CAST_POCKETWATCH.stroverridefn = function(act, ...)
+    if (GLOBAL.TheInput:IsControlPressed(GLOBAL.CONTROL_FORCE_ATTACK)) then
+        -- log("CONTROL_FORCE_ATTACK pressed strfn")
+        return GLOBAL.STRINGS.SIGNS.MENU.ACCEPT
+    end
+    -- log("hooked strfn")
+    return GLOBAL.STRINGS.ACTIONS.CAST_POCKETWATCH[GLOBAL.ACTIONS.CAST_POCKETWATCH.strfn(act, ...)]
+        or GLOBAL.STRINGS.ACTIONS.CAST_POCKETWATCH.GENERIC
+end
+
+AddPrefabPostInitAny(function(inst)
+    local type = containers.params[inst.prefab] and containers.params[inst.prefab].type or nil
+    if type and table.contains({ "pack", "chest" }, type) then
+        log("AddPrefabPostInitAny ListenForEvent:", type, tostring(inst))
+        -- inst:ListenForEvent("itemget", function(container, data)
+        --     log("itemget:", tostring(container), data.slot, tostring(data.item), GLOBAL.debugstack())
+        --     GLOBAL.ThePlayer.components.wandatimekit:TrackWatch(data.item, container, data.slot)
+        -- end)
+        inst:ListenForEvent("itemlose", function(container, data)
+            -- log("itemlose:", tostring(container), data.slot, tostring(data.item), GLOBAL.debugstack())
+            local kit = GLOBAL.ThePlayer and GLOBAL.ThePlayer.components
+                and GLOBAL.ThePlayer.components.wandatimekit or nil
+            if kit then
+                kit:RemoveTrackingPosition(container, data.slot)
+            end
+        end)
+    end
+end)
+
+
+
+AddPrefabPostInit("pocketwatch_recall_marker", function(inst)
+    log("pocketwatch_recall_marker spawned, is master:" .. tostring(GLOBAL.TheWorld.ismastersim))
+
+    -- inst:DoPeriodicTask(1, function(inst)
+    --     if inst and inst.Transform and inst.Transform.GetWorldPosition then
+    --         local x, y, z = inst.Transform:GetWorldPosition()
+    --         print(x, y, z)
+    --     end
+    -- end)
 end)

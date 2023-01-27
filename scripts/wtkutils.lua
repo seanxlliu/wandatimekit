@@ -1,16 +1,21 @@
 local debug = true
+CHEATS_ENABLED = debug
 local supportedLangs = { "en", "zh" }
+local logPrefix = "Wanda Timekit"
 
-local function log(message, params, always)
-    if params then
-        message = message .. " :(" .. type(params) .. ")" .. json.encode(params)
-    end
-
-    if not debug and not always then
+local function log(message, ...)
+    if not debug then
         return
     end
 
-    print("Wanda Timekit - " .. message)
+    for i,v in ipairs(arg) do
+        if type(v) == "table" and v.__tostring == nil then
+            message = message .. "\n" .. logPrefix .. " - "  .. json.encode(v) .. "\n"
+        else
+            message = message .. " " .. tostring(v)
+        end
+    end
+    print(logPrefix .. "- " .. message)
 end
 
 local function GetTime()
